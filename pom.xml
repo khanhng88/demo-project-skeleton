@@ -32,7 +32,8 @@
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.6/aspectjweaver-1.9.6.jar"
                     </argLine>
                     <suiteXmlFiles>
-                        <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
+                        <!--suppress UnresolvedMavenProperty -->
+                        <suiteXmlFile>${suiteXmlFiles}</suiteXmlFile>
                     </suiteXmlFiles>
                 </configuration>
                 <dependencies>
@@ -62,6 +63,7 @@
             <scope>test</scope>
         </dependency>
 
+
         <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -86,6 +88,7 @@
 
 
     </dependencies>
+
 
 
 </project>

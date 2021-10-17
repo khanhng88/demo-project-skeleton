@@ -3,6 +3,7 @@ package models.components.product;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import testdata.purchasing.ComputerSpec;
 
 public abstract class ComputerEssentialComponent {
@@ -23,7 +24,7 @@ public abstract class ComputerEssentialComponent {
     }
 
     public void selectSoftware(String type) {
-        selectCompSpecOption(type);
+        selectCompSoftwareSpecOption(type);
     }
 
     protected void selectCompSpecOption(String option){
@@ -36,6 +37,25 @@ public abstract class ComputerEssentialComponent {
     @Step("Click on [Add to cart]")
     public void clickOnAddToCartBtn(){
         driver.findElement(addToCartBtnSel).click();
+    }
+
+    public double getDefaultPrice() {
+        WebElement defaultPriceEl = driver.findElement(By.cssSelector(".product-price"));
+        return Double.parseDouble(defaultPriceEl.getText());
+
+    }
+
+    private void selectCompSoftwareSpecOption(String option) {
+        if(option == null) {
+            return;
+        }
+        String optionValue =  ComputerSpec.valueOf(option).value();
+        String selectorString = "//label[contains(text(), \"" + optionValue + "\")]/preceding-sibling::input";
+        By optionSel = By.xpath(selectorString);
+        if(driver.findElement(optionSel).isSelected()) {
+            return;
+        }
+        driver.findElement(optionSel).click();
     }
 
 }

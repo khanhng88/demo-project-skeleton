@@ -38,6 +38,8 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         essentialCompGeneric.selectProcessorType(compData.getProcessorType());
         essentialCompGeneric.selectRAM(compData.getRam());
         essentialCompGeneric.selectHDD(compData.getHdd());
+        essentialCompGeneric.selectSoftware(compData.getSoftware());
+        compData.setDefaultPrice(essentialCompGeneric.getDefaultPrice());
 
         // Add To cart
         essentialCompGeneric.clickOnAddToCartBtn();
@@ -55,16 +57,28 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         final double fixedPrice = 800.0;
 
         // Get additional fee
-        double additionalFees = 0.0;
-        additionalFees += ComputerSpec.valueOf(simpleComputer.getProcessorType()).additionPrice();
-        additionalFees += ComputerSpec.valueOf(simpleComputer.getRam()).additionPrice();
-        additionalFees += ComputerSpec.valueOf(simpleComputer.getHdd()).additionPrice();
+        double additionalFees = ComputerSpec.valueOf(simpleComputer.getProcessorType()).additionPrice()
+            + ComputerSpec.valueOf(simpleComputer.getRam()).additionPrice()
+            + ComputerSpec.valueOf(simpleComputer.getHdd()).additionPrice();
 
-        // Get Total current price for computer
-        double currentCompPrice = fixedPrice + additionalFees;
+        if(simpleComputer.getSoftware() != null) {
+            additionalFees += ComputerSpec.valueOf(simpleComputer.getSoftware()).additionPrice();
+        }
 
+        // verify computer price with options with sub-Total price
+        double currentCompPrice = simpleComputer.getDefaultPrice() + additionalFees;
+        double subTotalPrice = shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.subTotal).doubleValue();
+        System.out.println(subTotalPrice);
+        Assert.assertEquals(currentCompPrice, subTotalPrice,"[ERR] Sub Total price is not correct!");
+
+        //verify Total price (included ship and tax)
+        double currentTotalPrice = subTotalPrice
+                + shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.tax).doubleValue()
+                + shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.shipping).doubleValue();
+
+        double totalPrice = shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.total).doubleValue();
         // Compare
-        double itemTotalPrice = shoppingCartPage.shoppingCartItemComp().itemTotalPrice();
-        Assert.assertEquals(itemTotalPrice, currentCompPrice, "[ERR] Total price is not correct!");
+        Assert.assertEquals(totalPrice, currentTotalPrice, "[ERR] Total price is not correct!");
+        shoppingCartPage.cartTotalComponent().checkout();
     }
 }

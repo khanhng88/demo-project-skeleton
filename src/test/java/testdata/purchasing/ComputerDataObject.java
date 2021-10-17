@@ -7,6 +7,15 @@ public class ComputerDataObject {
     private String hdd;
     private String os;
     private String software;
+    private Double defaultPrice;
+
+    public Double getDefaultPrice() {
+        return defaultPrice;
+    }
+
+    public void setDefaultPrice(Double defaultPrice) {
+        this.defaultPrice = defaultPrice;
+    }
 
     public String getProcessorType() {
         return processorType;
@@ -56,6 +65,7 @@ public class ComputerDataObject {
                 ", hdd='" + hdd + '\'' +
                 ", os='" + os + '\'' +
                 ", software='" + software + '\'' +
+                ", default price ='" + defaultPrice + '\'' +
                 '}';
     }
 
