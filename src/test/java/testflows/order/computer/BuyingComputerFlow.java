@@ -1,6 +1,8 @@
 package testflows.order.computer;
 
 import models.components.product.ComputerEssentialComponent;
+import models.pages.CheckOutOptionPage;
+import models.pages.CheckOutPage;
 import models.pages.ItemDetailsPage;
 import models.pages.cart.ShoppingCartPage;
 import org.openqa.selenium.WebDriver;
@@ -79,6 +81,47 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         double totalPrice = shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.total).doubleValue();
         // Compare
         Assert.assertEquals(totalPrice, currentTotalPrice, "[ERR] Total price is not correct!");
-        shoppingCartPage.cartTotalComponent().checkout();
+        shoppingCartPage.cartTotalComponent().termOfServicebtn().click();
+        shoppingCartPage.cartTotalComponent().checkOutBtn().click();
+        CheckOutOptionPage checkOutOptionPage = new CheckOutOptionPage(driver);
+        checkOutOptionPage.asGuestOrRegisteredUser().checkOutAsGuestBtn().click();
+
+        //Go through check out steps
+        checkOutSteps();
     }
+
+    public void checkOutSteps() {
+        CheckOutPage checkOutPage = new CheckOutPage(this.driver);
+
+        //filling billing info
+        checkOutPage.billingAddressComp().firstName().sendKeys("Khanh");
+        checkOutPage.billingAddressComp().lastName().sendKeys("Nguyen");
+        checkOutPage.billingAddressComp().email().sendKeys("khanh@mail.com");
+        checkOutPage.billingAddressComp().company().sendKeys("ABC");
+        checkOutPage.billingAddressComp().selectCountry("Viet Nam");
+        checkOutPage.billingAddressComp().selectState("Other (Non US)");
+        checkOutPage.billingAddressComp().city().sendKeys("Ho Chi Minh");
+        checkOutPage.billingAddressComp().address1().sendKeys("8 Phan Xich Long Ward 3 Phu Nhuan Dist");
+        checkOutPage.billingAddressComp().zip().sendKeys("70000");
+        checkOutPage.billingAddressComp().phone().sendKeys("0946537203");
+        checkOutPage.billingAddressComp().continueBtn().click();
+        checkOutPage.shippingAddressComp().continueBtn().click();
+
+        //select shipping method
+        checkOutPage.shippingMethodComp().twoDayShippingOption().click();
+        checkOutPage.shippingMethodComp().continueBtn().click();
+
+        //select payment method
+        checkOutPage.paymentMethodComp().cashOnDelivery().click();
+        checkOutPage.paymentMethodComp().continueBtn().click();
+
+        //review payment info and continue
+        checkOutPage.paymentInformationComp().continueBtn().click();
+
+        //confirm order
+        checkOutPage.confirmOrderComp().confirmBtn().click();
+        checkOutPage.confirmOrderComp().finishBtn().click();
+    }
+
+
 }
