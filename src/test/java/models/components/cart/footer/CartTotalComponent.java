@@ -37,8 +37,4 @@ public class CartTotalComponent {
         return mapPrice;
     }
 
-    public void checkout() {
-        termOfServicebtn().click();
-        checkOutBtn().click();
-    }
 }

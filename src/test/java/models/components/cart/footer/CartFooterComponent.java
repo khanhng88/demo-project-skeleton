@@ -13,7 +13,7 @@ public class CartFooterComponent {
         return new CartShippingComponent(driver);
     }
 
-    public CartTotalComponent getCartTotalComponent() {
+    public CartTotalComponent cartTotalComponent() {
         return new CartTotalComponent(driver);
     }
 }
