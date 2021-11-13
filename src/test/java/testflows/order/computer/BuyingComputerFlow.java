@@ -195,6 +195,7 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
             System.out.println(key+" : "+priceMap.get(key));
             expectedFooterTotalPrice +=priceMap.get(key).doubleValue();
         }
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         Assert.assertEquals(checkOutPage.confirmOrderComp().cartFooterComponent().cartTotalComponent().
                 buildMapPrice().get(ComputerPriceType.total).doubleValue(),expectedFooterTotalPrice,
                 "[ERR] Total value is not matched");
@@ -202,8 +203,6 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         //confirm order
         checkOutPage.confirmOrderComp().confirmBtn().click();
         checkOutPage.confirmOrderComp().finishBtn().click();
-
-
     }
 
     public void completeCheckOut() {
@@ -214,6 +213,5 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
                 contains(completeCheckOutPage.completedCheckOutDataComp().orderNum()),"[ERR] The order number is not matched.");
 
         completeCheckOutPage.completedCheckOutDataComp().continueBtn().click();
-
     }
 }
