@@ -29,6 +29,7 @@ public class Driver {
         chromeOptions.addArguments("--incognito");
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().timeouts().implicitlyWait(2, TimeUnit.SECONDS);
+        driver.manage().window().maximize();
         return driver;
     }
 

@@ -7,6 +7,7 @@ import org.openqa.selenium.WebElement;
 public class PaymentMethodComp {
     private final WebDriver driver;
     private By cashOndelieverySel = By.cssSelector("[value=\"Payments.CashOnDelivery\"]");
+    private By cashOndelieverylblSel = By.xpath("following-sibling::*");
     private By checkMoneyOrderSel = By.cssSelector("[value=\"Payments.CheckMoneyOrder\"]");
     private By creditCardSel = By.cssSelector("[value=\"Payments.Manual\"]");
     private By purchaseOrderSel = By.cssSelector("[value=\"Payments.PurchaseOrder\"]");
@@ -22,6 +23,10 @@ public class PaymentMethodComp {
 
     public WebElement cashOnDelivery() {
         return driver.findElement(cashOndelieverySel);
+    }
+
+    public WebElement cashOnDeliveryLabel() {
+        return cashOnDelivery().findElement(cashOndelieverylblSel);
     }
 
     public WebElement checkMoneyOrder() {

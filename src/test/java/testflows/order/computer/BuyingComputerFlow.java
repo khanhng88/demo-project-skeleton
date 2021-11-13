@@ -4,14 +4,17 @@ import models.components.cart.CartItemRowData;
 import models.components.product.ComputerEssentialComponent;
 import models.pages.CheckOutOptionPage;
 import models.pages.CheckOutPage;
+import models.pages.CompleteCheckOutPage;
 import models.pages.ItemDetailsPage;
 import models.pages.cart.ShoppingCartPage;
 import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
 import testdata.purchasing.ComputerDataObject;
 import testdata.purchasing.ComputerSpec;
+import testdata.purchasing.UserData;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
 
@@ -70,7 +73,7 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
 
         //verify cart item : product name, link, attributes, price, subtotal price, total prices
         double expectedSubTotalPrice = simpleComputer.getDefaultPrice() + additionalFees;
-        
+
         for(CartItemRowData cartItemRowData : shoppingCartPage.shoppingCartItemComp().cartItemRowDataList()) {
             Assert.assertTrue(cartItemRowData.getProductAttributes().contains(ComputerSpec.valueOf(simpleComputer.getProcessorType()).value()),
                     "[ERR] Processor Type is not matched.");
@@ -95,24 +98,24 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         CheckOutOptionPage checkOutOptionPage = new CheckOutOptionPage(driver);
         checkOutOptionPage.asGuestOrRegisteredUser().checkOutAsGuestBtn().click();
 
-        //Go through check out steps
-        checkOutSteps();
     }
 
-    public void checkOutSteps() {
+    public void goToCheckOutOptions(UserData userData, ComputerDataObject computerDataObject) {
         CheckOutPage checkOutPage = new CheckOutPage(this.driver);
 
         //filling billing info
-        checkOutPage.billingAddressComp().firstName().sendKeys("Khanh");
-        checkOutPage.billingAddressComp().lastName().sendKeys("Nguyen");
-        checkOutPage.billingAddressComp().email().sendKeys("khanh@mail.com");
-        checkOutPage.billingAddressComp().company().sendKeys("ABC");
-        checkOutPage.billingAddressComp().selectCountry("Viet Nam");
-        checkOutPage.billingAddressComp().selectState("Other (Non US)");
-        checkOutPage.billingAddressComp().city().sendKeys("Ho Chi Minh");
-        checkOutPage.billingAddressComp().address1().sendKeys("8 Phan Xich Long Ward 3 Phu Nhuan Dist");
-        checkOutPage.billingAddressComp().zip().sendKeys("70000");
-        checkOutPage.billingAddressComp().phone().sendKeys("0946537203");
+        checkOutPage.billingAddressComp().firstName().sendKeys(userData.getFirstName());
+        checkOutPage.billingAddressComp().lastName().sendKeys(userData.getLastName());
+        checkOutPage.billingAddressComp().email().sendKeys(userData.getEmail());
+        checkOutPage.billingAddressComp().company().sendKeys(userData.getCompany());
+        checkOutPage.billingAddressComp().selectCountry(userData.getCountry());
+        checkOutPage.billingAddressComp().selectState(userData.getState());
+        checkOutPage.billingAddressComp().city().sendKeys(userData.getCity());
+        checkOutPage.billingAddressComp().address1().sendKeys(userData.getAddress1());
+        checkOutPage.billingAddressComp().zip().sendKeys(userData.getZip());
+        checkOutPage.billingAddressComp().phone().sendKeys(userData.getPhone());
+
+
         checkOutPage.billingAddressComp().continueBtn().click();
         checkOutPage.shippingAddressComp().continueBtn().click();
 
@@ -124,13 +127,93 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         checkOutPage.paymentMethodComp().cashOnDelivery().click();
         checkOutPage.paymentMethodComp().continueBtn().click();
 
-        //review payment info and continue
+        // and continue
         checkOutPage.paymentInformationComp().continueBtn().click();
+
+        //check and review user and shipping/payment info
+        //billing section
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getName().getText().trim(), userData.getFirstName()+
+                " "+userData.getLastName(), "[ERR] Name in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getEmail().getText().trim(), "Email: "+userData.getEmail(),
+                "[ERR] email in Billing section  is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getCompany().getText().trim(), userData.getCompany(),
+                "[ERR] Company in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getAddress1().getText().trim(), userData.getAddress1(),
+                "[ERR] Address1  in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getCountry().getText().trim(), userData.getCountry(),
+                "[ERR] Country  in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getCityStateZip().getText().trim(), userData.getCity()
+                +" , "+userData.getZip(),"[ERR] City State Zip info in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().billingInfoComp().getPhone().getText().trim(), "Phone: "+userData.getPhone(),
+                "[ERR] Phone number in Billing section is not matched.");
+        //check payment method info
+        Assert.assertTrue(checkOutPage.paymentMethodComp().cashOnDeliveryLabel().getAttribute("innerHTML").trim().
+                contains(checkOutPage.confirmOrderComp().billingInfoComp().getPaymentMethod().getText().trim())
+                , "[ERR] Payment method in Billing section is not matched.");
+
+
+        //shipping section
+        Assert.assertEquals(checkOutPage.confirmOrderComp().shippingInfoComp().getName().getText(), userData.getFirstName()+
+                " "+userData.getLastName(), "[ERR] Name in Shipping section is not matched.");
+        Assert.assertTrue(checkOutPage.confirmOrderComp().shippingInfoComp().getEmail().getText().contains(userData.getEmail()),
+                "[ERR] email in Billing section  is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().shippingInfoComp().getCompany().getText(), userData.getCompany(),
+                "[ERR] Company in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().shippingInfoComp().getAddress1().getText(), userData.getAddress1(),
+                "[ERR] Address1  in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().shippingInfoComp().getCountry().getText(), userData.getCountry(),
+                "[ERR] Country  in Billing section is not matched.");
+        Assert.assertEquals(checkOutPage.confirmOrderComp().shippingInfoComp().getCityStateZip().getText(), userData.getCity()
+                +" , "+userData.getZip(),"[ERR] City State Zip info in Billing section is not matched.");
+        Assert.assertTrue(checkOutPage.confirmOrderComp().shippingInfoComp().getPhone().getText().contains(userData.getPhone()),
+                "[ERR] Phone number in Billing section is not matched.");
+        //check shipping method info
+        Assert.assertTrue(checkOutPage.shippingMethodComp().twoDayShippingOptionlabel().getAttribute("innerHTML").trim().
+                        contains(checkOutPage.confirmOrderComp().shippingInfoComp().getShippingMethod().getText().trim()),
+                "[ERR] Shipping method in Shipping section is not matched.");
+
+        //check cart item row in complete checkout page
+        double expectedFooterSubTotalPrice = 0.0;
+        for(CartItemRowData cartItemRowData: checkOutPage.confirmOrderComp().summaryShoppingCartComp().cartItemRowDataList()) {
+            Assert.assertTrue(cartItemRowData.getProductAttributes().contains(ComputerSpec.valueOf(computerDataObject.getProcessorType()).value()),
+                    "[ERR] Processor type is not matched.");
+            Assert.assertTrue(cartItemRowData.getProductAttributes().replaceAll("\\s", "").contains(ComputerSpec.valueOf(computerDataObject.getRam()).value().replaceAll("\\s", "")),
+                    "[ERR] Ram value is not matched.");
+            Assert.assertTrue(cartItemRowData.getProductAttributes().contains(ComputerSpec.valueOf(computerDataObject.getHdd()).value()),
+                    "[ERR] HDD value is not matched.");
+            expectedFooterSubTotalPrice = cartItemRowData.getPrice() * cartItemRowData.getQuantity();
+            Assert.assertEquals(cartItemRowData.getSubTotal(), expectedFooterSubTotalPrice,
+                    "[ERR] Subtotal is unmatched.");
+        }
+
+        //check cart footer info
+        double expectedFooterTotalPrice = 0.0;
+        Map<String, Double> priceMap = checkOutPage.confirmOrderComp().cartFooterComponent().
+                cartTotalComponent().buildMapPrice();
+        priceMap.remove(ComputerPriceType.total);
+        for(String key : priceMap.keySet()) {
+            System.out.println(key+" : "+priceMap.get(key));
+            expectedFooterTotalPrice +=priceMap.get(key).doubleValue();
+        }
+        Assert.assertEquals(checkOutPage.confirmOrderComp().cartFooterComponent().cartTotalComponent().
+                buildMapPrice().get(ComputerPriceType.total).doubleValue(),expectedFooterTotalPrice,
+                "[ERR] Total value is not matched");
 
         //confirm order
         checkOutPage.confirmOrderComp().confirmBtn().click();
         checkOutPage.confirmOrderComp().finishBtn().click();
+
+
     }
 
+    public void completeCheckOut() {
+        CompleteCheckOutPage completeCheckOutPage = new CompleteCheckOutPage(driver);
+        Assert.assertTrue(completeCheckOutPage.pageTitle().getText().contains("Thank you"),
+                "[ERR] Wrong title");
+        Assert.assertTrue(completeCheckOutPage.completedCheckOutDataComp().orderDetailLink().getAttribute("href").
+                contains(completeCheckOutPage.completedCheckOutDataComp().orderNum()),"[ERR] The order number is not matched.");
 
+        completeCheckOutPage.completedCheckOutDataComp().continueBtn().click();
+
+    }
 }

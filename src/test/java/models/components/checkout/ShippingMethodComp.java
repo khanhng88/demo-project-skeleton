@@ -9,6 +9,7 @@ public class ShippingMethodComp {
     private By groundShippingOptionSel = By.cssSelector("[value='Ground___Shipping.FixedRate']");
     private By nextDayAirShippingOptionSel = By.cssSelector("[value='Next Day Air___Shipping.FixedRate']");
     private By twoDayShippingOptionSel = By.cssSelector("[value='2nd Day Air___Shipping.FixedRate']");
+    private By twoDayShippingOptionlblSel = By.xpath("following-sibling::*");
     private By continueSel = By.cssSelector("#shipping-method-buttons-container >input");
 
     public ShippingMethodComp(WebDriver driver) {
@@ -29,5 +30,9 @@ public class ShippingMethodComp {
 
     public WebElement twoDayShippingOption() {
         return driver.findElement(twoDayShippingOptionSel);
+    }
+
+    public WebElement twoDayShippingOptionlabel() {
+        return twoDayShippingOption().findElement(twoDayShippingOptionlblSel);
     }
 }

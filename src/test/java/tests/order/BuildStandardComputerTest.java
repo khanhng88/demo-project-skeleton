@@ -6,6 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import testdata.purchasing.ComputerDataObject;
+import testdata.purchasing.UserData;
 import testdata.url.URL;
 import testflows.order.computer.BuyingComputerFlow;
 import tests.BaseTest;
@@ -27,6 +28,23 @@ public class BuildStandardComputerTest extends BaseTest {
         // Go to Shopping cart Page
         goTo(URL.CART);
         orderingComputerFlow.verifyComputerAdded(computerDataObject);
+
+        //checkout
+        UserData userData = new UserData();
+        userData.setFirstName("Khanh");
+        userData.setLastName("Nguyen");
+        userData.setEmail("khanh@mail.com");
+        userData.setCompany("ABC");
+        userData.setAddress1("Phan Xich Long");
+        userData.setCountry("Viet Nam");
+        userData.setState("Other (Non US)");
+        userData.setCity("Ho Chi Minh");
+        userData.setZip("70000");
+        userData.setPhone("0911111111");
+
+        orderingComputerFlow.goToCheckOutOptions(userData, computerDataObject);
+
+        orderingComputerFlow.completeCheckOut();
     }
 
     @DataProvider()
