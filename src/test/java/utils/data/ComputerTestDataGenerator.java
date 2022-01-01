@@ -11,19 +11,14 @@ public class ComputerTestDataGenerator {
 
     public static ComputerDataObject[] getTestDataFrom(String jsonDataFileLocation) {
         ComputerDataObject[] cheapComputers = new ComputerDataObject[]{};
-        try {
+        String currentProjectLocation = System.getProperty("user.dir");
+        try (  Reader reader = Files.newBufferedReader(Paths.get(currentProjectLocation +"/"+ jsonDataFileLocation)))
+        {
             // create Gson instance
             Gson gson = new Gson();
 
-            // Read file content
-            String currentProjectLocation = System.getProperty("user.dir");
-            Reader reader = Files.newBufferedReader(Paths.get(currentProjectLocation + jsonDataFileLocation));
-
             // Convert to array of Computer instances
             cheapComputers = gson.fromJson(reader, ComputerDataObject[].class);
-
-            reader.close();
-
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -11,7 +11,7 @@ import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
 import testdata.purchasing.ComputerDataObject;
 import testdata.purchasing.ComputerSpec;
-import testdata.purchasing.UserData;
+import testdata.user.UserData;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;

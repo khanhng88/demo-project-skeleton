@@ -3,8 +3,9 @@
 <suite name="Regression" parallel="classes" thread-count="2">
     <test name="Computer Order flows">
         <classes>
-            <class name="tests.order.BuildCheapComputerTest"/>
-            <class name="tests.order.BuildStandardComputerTest"/>
+<!--            <class name="tests.order.BuildCheapComputerTest"/>-->
+<!--            <class name="tests.order.BuildStandardComputerTest"/>-->
+            <class name="tests.order.BuildMultipleTypeComputerTest"/>
         </classes>
     </test>
 </suite>
