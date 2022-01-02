@@ -1,7 +1,7 @@
 package utils.data;
 
 import com.google.gson.Gson;
-import testdata.purchasing.ComputerDataObject;
+import testdata.purchasing.computer.ComputerDataObject;
 
 import java.io.Reader;
 import java.nio.file.Files;

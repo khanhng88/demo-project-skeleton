@@ -1,4 +1,4 @@
-package testdata.purchasing;
+package testdata.purchasing.computer;
 
 public class CheapComputerBuilder {
 

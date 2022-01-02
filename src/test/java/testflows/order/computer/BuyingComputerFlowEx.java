@@ -1,5 +1,6 @@
 package testflows.order.computer;
 
+import models.components.cart.AbstractShoppingCartComp;
 import models.components.cart.ShoppingCartItemComponent;
 import models.components.cart.SummaryShoppingCartComp;
 import models.components.product.ComputerEssentialComponent;
@@ -12,21 +13,27 @@ import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
 import testdata.purchasing.computer.ComputerDataObject;
 import testdata.purchasing.computer.ComputerSpec;
+import testdata.purchasing.computer.ComputerType;
 import testdata.user.UserData;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
-public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
+public class BuyingComputerFlowEx<T extends ComputerEssentialComponent> implements ComputerPriceType{
 
     private final WebDriver driver;
     private T essentialCompGeneric;
+    private Map<ComputerType, ComputerOrder> allComputerData;
+    double subTotal = 0.0;
 
-    public BuyingComputerFlow(WebDriver driver) {
+    public BuyingComputerFlowEx(WebDriver driver) {
         this.driver = driver;
+        allComputerData = new HashMap<>();
     }
 
-    public BuyingComputerFlow<T> withComputerEssentialComp(Class<T> computerType) {
+    public BuyingComputerFlowEx<T> withComputerEssentialComp(Class<T> computerType) {
         try {
             essentialCompGeneric = computerType.getConstructor(WebDriver.class).newInstance(driver);
         } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
@@ -35,10 +42,13 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         return this;
     }
 
-    public void buildComputer(ComputerDataObject compData) {
+    public void buildComputer(ComputerType computerType, ComputerDataObject compData, int quantity) {
+        //add computer type, computer data and quantity into computerOrder object
+        ComputerOrder computerOrder = new ComputerOrder(computerType, compData, quantity);
         if (essentialCompGeneric == null) {
             throw new RuntimeException("Please call withComputerType to specify computer type!");
         }
+        
         ItemDetailsPage detailsPage = new ItemDetailsPage(driver);
 
         // Build Comp specs
@@ -46,59 +56,94 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
         essentialCompGeneric.selectRAM(compData.getRam());
         essentialCompGeneric.selectHDD(compData.getHdd());
         essentialCompGeneric.selectSoftware(compData.getSoftware());
+        essentialCompGeneric.setQuantity(quantity);
         compData.setDefaultPrice(essentialCompGeneric.getDefaultPrice());
 
         // Add To cart
         essentialCompGeneric.clickOnAddToCartBtn();
         try {
             detailsPage.waitUntilItemAddedToCart();
+            //add computer type and computer order into map allComputerData
+            allComputerData.put(computerType, computerOrder);
         } catch (Exception e) {
             throw new Error("[ERR] Item is not added after 15s!");
         }
     }
 
-    public void verifyComputerAdded(ComputerDataObject simpleComputer) {
+    public void verifyComputerAdded() {
         ShoppingCartPage shoppingCartPage = new ShoppingCartPage(driver);
+        allComputerData.keySet().forEach(computerType -> {
+            double startPrice = 0.0;
+            switch (computerType){
+                case CHEAP_COMPUTER:
+                    startPrice = cheapComputerPrice;
+                    break;
+                case STANDARD_COMPUTER:
+                    startPrice = standardComputerPrice;
+                    break;
+                default:
+                    Assert.fail("Missing computer start price for "+computerType.type());
+            }
+            //get list of data row that matches computer type
+            Optional<ShoppingCartItemComponent.CartItemRowData> cartItemRow =
+                shoppingCartPage.shoppingCartItemComp().cartItemRowDataList().stream()
+                        .filter(cartItemRowData ->cartItemRowData.getProductName().equals(computerType.type())).findFirst();
 
-        // TODO: need to handle this price
-        final double fixedPrice = 800.0;
+            ShoppingCartItemComponent.CartItemRowData cartItemRowData = cartItemRow.orElse(null);
 
-        // Get additional fee
-        double additionalFees = ComputerSpec.valueOf(simpleComputer.getProcessorType()).additionPrice()
-            + ComputerSpec.valueOf(simpleComputer.getRam()).additionPrice()
-            + ComputerSpec.valueOf(simpleComputer.getHdd()).additionPrice();
+            if(cartItemRowData!=null) {
+                ComputerOrder computerOrder = allComputerData.get(computerType);
+                double orderPrice = calculateItemPrice(computerOrder.computerDataObject, startPrice) * computerOrder.quantity();
+                subTotal +=orderPrice;
 
-        if(simpleComputer.getSoftware() != null) {
-            additionalFees += ComputerSpec.valueOf(simpleComputer.getSoftware()).additionPrice();
-        }
+                System.out.println("Subtotal of all items: "+subTotal);
 
-        //verify cart item : product name, link, attributes, price, subtotal price, total prices
-        double expectedSubTotalPrice = simpleComputer.getDefaultPrice() + additionalFees;
+                Assert.assertEquals(orderPrice, cartItemRowData.getPrice()*computerOrder.quantity,
+                        "[ERR] incorrect item price");
+                Assert.assertTrue(cartItemRowData.getProductAttributes()
+                                .contains(ComputerSpec.valueOf(computerOrder.computerDataObject.getHdd()).value()),
+                        "[ERR] not matched HDD value");
 
-        for(ShoppingCartItemComponent.CartItemRowData cartItemRowData : shoppingCartPage.shoppingCartItemComp().cartItemRowDataList()) {
-            Assert.assertTrue(cartItemRowData.getProductAttributes().contains(ComputerSpec.valueOf(simpleComputer.getProcessorType()).value()),
-                    "[ERR] Processor Type is not matched.");
-            Assert.assertTrue(cartItemRowData.getProductAttributes().contains(ComputerSpec.valueOf(simpleComputer.getHdd()).value()),
-                    "[ERR] HDD value is not matched.");
+                Assert.assertTrue(cartItemRowData.getProductAttributes()
+                                .contains(ComputerSpec.valueOf(computerOrder.computerDataObject.getProcessorType()).value()),
+                        "[ERR] not matched processor type value");
+            }else {
+                Assert.fail("[ERR] The computer with type " + computerType.type() + " was not added. ");
+            }
 
-            Assert.assertNotNull(cartItemRowData.getProductName(), "[ERR] Product name is null.");
-            Assert.assertNotNull(cartItemRowData.getProductLink(), "[ERR] Product link is null.");
+        });
 
-            Assert.assertEquals(cartItemRowData.getPrice(),expectedSubTotalPrice, "[ERR] Total Cart Item Price is not matched.");
-        }
         double footerSubTotalPrice = shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.subTotal).doubleValue();
         double footerTotalPrice = shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.total).doubleValue();
         double expectedFooterTotalPrice = footerSubTotalPrice
                 + shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.tax).doubleValue()
                 + shoppingCartPage.cartTotalComponent().buildMapPrice().get(ComputerPriceType.shipping).doubleValue();
-        Assert.assertEquals(footerSubTotalPrice, expectedSubTotalPrice, "[ERR] Current total price at footer is incorrect.");
+
+        Assert.assertEquals(footerSubTotalPrice, subTotal, "[ERR] Current sub total price at footer is incorrect.");
         Assert.assertEquals(footerTotalPrice, expectedFooterTotalPrice, "[ERR] Current total price at footer is incorrect.");
 
         shoppingCartPage.cartTotalComponent().termOfServicebtn().click();
         shoppingCartPage.cartTotalComponent().checkOutBtn().click();
         CheckOutOptionPage checkOutOptionPage = new CheckOutOptionPage(driver);
         checkOutOptionPage.asGuestOrRegisteredUser().checkOutAsGuestBtn().click();
+    }
 
+    /**
+     * calculate price of each item
+     * @param computerDataObject
+     * @param startPrice
+     * @return
+     */
+    private double calculateItemPrice(ComputerDataObject computerDataObject, double startPrice) {
+        double additionalFees = 0.0;
+        additionalFees = additionalFees + ComputerSpec.valueOf(computerDataObject.getProcessorType()).additionPrice()
+                + ComputerSpec.valueOf(computerDataObject.getRam()).additionPrice()
+                + ComputerSpec.valueOf(computerDataObject.getHdd()).additionPrice();
+        if(computerDataObject.getSoftware()!=null) {
+            additionalFees += ComputerSpec.valueOf(computerDataObject.getSoftware()).additionPrice();
+        }
+
+        return startPrice + additionalFees;
     }
 
     public void goToCheckOutOptions(UserData userData, ComputerDataObject computerDataObject) {
@@ -214,5 +259,29 @@ public class BuyingComputerFlow<T extends ComputerEssentialComponent> {
                 contains(completeCheckOutPage.completedCheckOutDataComp().orderNum()),"[ERR] The order number is not matched.");
 
         completeCheckOutPage.completedCheckOutDataComp().continueBtn().click();
+    }
+
+    public static class ComputerOrder{
+        private ComputerType computerType;
+        private ComputerDataObject computerDataObject;
+        private int quantity;
+
+        public ComputerOrder(ComputerType computerType, ComputerDataObject computerDataObject, int quantity) {
+            this.computerType = computerType;
+            this.computerDataObject = computerDataObject;
+            this.quantity = quantity;
+        }
+
+        public ComputerType computerType() {
+            return this.computerType;
+        }
+
+        public ComputerDataObject computerDataObject() {
+            return this.computerDataObject;
+        }
+
+        public int quantity() {
+            return this.quantity;
+        }
     }
 }

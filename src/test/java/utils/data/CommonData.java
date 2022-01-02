@@ -1,7 +1,6 @@
 package utils.data;
 
 import com.google.gson.Gson;
-import testdata.purchasing.ComputerDataObject;
 import testdata.user.UserData;
 
 import java.io.Reader;

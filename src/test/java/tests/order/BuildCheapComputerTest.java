@@ -5,7 +5,7 @@ import models.components.product.CheapComputerEssentialComponent;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import testdata.purchasing.ComputerDataObject;
+import testdata.purchasing.computer.ComputerDataObject;
 import testdata.user.UserData;
 import testdata.url.URL;
 import testflows.order.computer.BuyingComputerFlow;
